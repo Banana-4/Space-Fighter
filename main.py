@@ -1,9 +1,27 @@
 import pygame
 import os
 
-class Bullets:
-    def __init__(self):
-        pass
+class Bullet:
+    def __init__(self, pos, left):
+        self._rect = pygame.Rect(pos[0], pos[1], 10, 5)
+        self._color = "#ff0000"
+        self._alive = True
+        self._alive_time = 0
+
+        if left:
+            self._speed = 400
+        else:
+            self._speed = -400
+    def update(self, dt):
+        x = self._rect + self._speed * dt
+        self._alive_time += dt
+        self._alive_time = True if self._alive_time < self._max_time else False
+    
+    def draw(self, surface):
+        if self._alive:
+            self._rect.fill(self._color)
+            pygame.draw.rect(surface, self._rect)
+
 
 class SpaceShip:
     def __init__(self, img, scale, pos, flip = False):
