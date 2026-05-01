@@ -7,7 +7,7 @@ class Bullet:
         self._color = "#ff0000"
         self._alive = True
         self._alive_time = 0
-
+        self._max_time = 60
         if left:
             self._speed = 400
         else:
