@@ -12,11 +12,12 @@ class Bullet:
             self._speed = 400
         else:
             self._speed = -400
+
     def update(self, dt):
-        x = self._rect + self._speed * dt
+        self._rect.y += self._speed * dt
         self._alive_time += dt
         self._alive_time = True if self._alive_time < self._max_time else False
-    
+
     def draw(self, surface):
         if self._alive:
             self._rect.fill(self._color)
