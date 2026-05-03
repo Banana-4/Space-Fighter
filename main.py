@@ -47,6 +47,8 @@ class SpaceShip:
         self._bullets = []
         self._firing_cooldown = 1
         self._firing_time = 0
+        self._hitpoints = 3
+        self._alive = True
         path = os.path.join("assets", img)
         self._sprite = pygame.image.load(path)
         if not self._sprite:
@@ -75,6 +77,8 @@ class SpaceShip:
         for b in self._bullets:
             b.update(dt)  
         self._bullets = [b for b in self._bullets if b.alive]
+        if self._hitpoints == 0:
+            self._alive = False
         self._firing_time -= dt
             
     def move_left(self):
@@ -88,13 +92,16 @@ class SpaceShip:
             bullet = Bullet((self._pos[0] + self._hitbox.width + 5, self._hitbox.y), top)
             self._bullets.append(bullet)
             self._firing_time = self._firing_cooldown
+    def hit(self):
+        self._hitpoints -= 1
+        
+    @property
+    def alive(self):
+        return self._alive
 
     @property
     def hitbox(self):
         return self._hitbox
-
-    def hit(self):
-        pass
 
     @property
     def bullets(self):
@@ -160,8 +167,10 @@ class Game:
             self._player2.shoot(False)
 
     def update(self):
-        self._player1.update(self._bound_box[0], 1/60)
-        self._player2.update(self._bound_box[0], 1/60)
+        if self._player1.alive:
+            self._player1.update(self._bound_box[0], 1/60)
+        if self._player2.alive:
+            self._player2.update(self._bound_box[0], 1/60)
         self.collision()
         
     def draw(self):
@@ -175,11 +184,12 @@ class Game:
         for b in  bullets:
             if b.alive and b.collision(self._player2.hitbox):
                 b.destroy()
+                self._player2.hit()
         bullets = self._player2.bullets
         for b in bullets:
             if b.alive and b.collision(self._player1.hitbox):
                 b.destroy()
-
+                self._player1.hit()
 if __name__ == "__main__":
     game = Game()
     game.main()
