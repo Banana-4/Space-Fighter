@@ -16,12 +16,18 @@ class Bullet:
     def update(self, dt):
         self._rect.y += self._speed * dt
         self._alive_time += dt
-        self._alive_time = True if self._alive_time < self._max_time else False
+        self._alive = self._alive_time < self._max_time
 
     def draw(self, surface):
         if self._alive:
             pygame.draw.rect(surface,self._color, self._rect)
 
+    def destroyed(self):
+        self._alive = False
+        
+    @property 
+    def alive(self):
+        return self._alive
 
 class SpaceShip:
     def __init__(self, img, scale, pos, flip = False):
@@ -31,7 +37,7 @@ class SpaceShip:
         self._speed = pygame.Vector2(0,0)
         self._moving = False
         self._bullets = []
-        self._firing_cooldown = 0.5
+        self._firing_cooldown = 1
         self._firing_time = 0
         path = os.path.join("assets", img)
         self._sprite = pygame.image.load(path)
@@ -54,29 +60,24 @@ class SpaceShip:
             self._pos[0] = x 
         for b in self._bullets:
             b.update(dt)
-        self._bullets = [b for b in self._bullets if b._alive]
+        self._bullets = [b for b in self._bullets if b.alive]
+        self._firing_time -= dt
             
-    def move_left(self, active):
-        if active:
-            self._speed[0] = self._velocity * -1
-            self._speed[1] = 0
-        else:
-            self._speed[0] = 0
+    def move_left(self):
+        self._speed[0] = self._velocity * -1
+      
 
-    def move_right(self, active):
-        if active:
-            self._speed[0] = self._velocity
-            self._speed[1] = 0
-        else:
-            self._speed[0] = 0
+    def move_right(self):
+        self._speed[0] = self._velocity
     
-    def shoot(self, top, dt):
+    def shoot(self, top):
         if self._firing_time <= 0:
             bullet = Bullet((self._pos[0] - 5, self._pos[1]), top)
             self._bullets.append(bullet)
             self._firing_time = self._firing_cooldown
-        else:
-            self._firing_time -= dt
+           
+    def move_stop(self):
+        self._speed[0] = 0
 
 
 
@@ -113,27 +114,27 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self._run = False
-                if event.type == pygame.KEYUP:
-                    if event.key == pygame.K_a:
-                        self._player1.move_left(False)
-                    if event.key == pygame.K_d:
-                        self._player1.move_right(False)
-                    if event.key == pygame.K_LEFT:
-                        self._player2.move_left(False)
-                    if event.key == pygame.K_RIGHT:
-                        self._player2.move_right(False)
-                            
+           
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
-            self._player1.move_left(True)
-        if keys[pygame.K_d]:
-            self._player1.move_right(True)
+            self._player1.move_left()
+        elif keys[pygame.K_d]:
+            self._player1.move_right()
+        else:
+            self._player1.move_stop()
+
         if keys[pygame.K_LCTRL]:
-            self._player1.shoot(True, 1/60)
+            self._player1.shoot(True)
+
         if keys[pygame.K_LEFT]:
-            self._player2.move_left(True)
-        if keys[pygame.K_RIGHT]:
-            self._player2.move_right(True)
+            self._player2.move_left()
+        elif keys[pygame.K_RIGHT]:
+            self._player2.move_right()
+        else:
+            self._player2.move_stop()
+
+        if keys[pygame.K_RCTRL]:
+            self._player2.shoot(False)
 
     def update(self):
         self._player1.update(self._bound_box[0], 1/60)
