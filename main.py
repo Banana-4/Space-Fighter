@@ -28,7 +28,8 @@ class Bullet:
     
     def collision(self, targate):
         if self._rect.colliderect(targate):
-            self.destroy()
+            return True
+        return False
 
     @property 
     def alive(self):
@@ -84,9 +85,10 @@ class SpaceShip:
     
     def shoot(self, top):
         if self._firing_time <= 0:
-            bullet = Bullet((self._pos[0] + self._hitbox.width, self._hitbox.y), top)
+            bullet = Bullet((self._pos[0] + self._hitbox.width + 5, self._hitbox.y), top)
             self._bullets.append(bullet)
             self._firing_time = self._firing_cooldown
+
     @property
     def hitbox(self):
         return self._hitbox
