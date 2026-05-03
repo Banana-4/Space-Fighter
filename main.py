@@ -21,10 +21,10 @@ class Bullet:
     def draw(self, surface):
         if self._alive:
             pygame.draw.rect(surface,self._color, self._rect)
-
+            
     def destroyed(self):
         self._alive = False
-        
+
     @property 
     def alive(self):
         return self._alive
@@ -33,6 +33,8 @@ class SpaceShip:
     def __init__(self, img, scale, pos, flip = False):
         self._spriteSize = scale
         self._pos = pygame.Vector2(pos[0], pos[1])
+        self._align_pos()
+        self._hitbox = pygame.Rect(self._pos[0], self._pos[1], 40, scale[1])
         self._velocity = 300
         self._speed = pygame.Vector2(0,0)
         self._moving = False
@@ -46,18 +48,24 @@ class SpaceShip:
         self._sprite = pygame.transform.scale(self._sprite, self._spriteSize)
         if flip:
             self._sprite = pygame.transform.flip(self._sprite, False, flip)
+    
+    def _align_pos(self):
+        self._pos[0] -= self._spriteSize[0] / 2
+        self._pos[1] -= self._spriteSize[1] / 2 if self._pos[1] != 0 else  self._pos[1]  + self._spriteSize[1] / 2
+    
 
     def draw(self, surface):
         # use the center as the origin not the left top corner of the image
-        x = self._pos[0] - self._spriteSize[0] / 2
-        y = self._pos[1]  - self._spriteSize[1] / 2 if self._pos[1] != 0 else  self._pos[1]  + self._spriteSize[1] / 2
-        surface.blit(self._sprite, (x, y))
+        surface.blit(self._sprite, (self._pos[0], self._pos[1]))
+        #pygame.draw.rect(surface,"#00ff00", self._hitbox)
         for b in self._bullets:
             b.draw(surface)
+
     def update(self, bound, dt):
         x = self._pos[0] + self._speed[0] * dt
-        if x >= self._spriteSize[0] / 4 and x  <= bound - self._spriteSize[0] / 4: 
+        if (x + self._spriteSize[0] / 2 - self._hitbox.width / 2)  >= 0 and (x + self._hitbox.width / 2 + self._spriteSize[0] / 2) <= bound: 
             self._pos[0] = x 
+            self._hitbox.x = x + self._hitbox.width / 2 + self._spriteSize[0] / 2
         for b in self._bullets:
             b.update(dt)
         self._bullets = [b for b in self._bullets if b.alive]
