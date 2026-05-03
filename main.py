@@ -16,14 +16,19 @@ class Bullet:
     def update(self, dt):
         self._rect.y += self._speed * dt
         self._alive_time += dt
-        self._alive = self._alive_time < self._max_time
+        self._alive = self._alive and self._alive_time < self._max_time
 
     def draw(self, surface):
         if self._alive:
             pygame.draw.rect(surface,self._color, self._rect)
             
-    def destroyed(self):
+    def destroy(self):
+        print("boom")
         self._alive = False
+    
+    def collision(self, targate):
+        if self._rect.colliderect(targate):
+            self.destroy()
 
     @property 
     def alive(self):
@@ -65,29 +70,37 @@ class SpaceShip:
         x = self._pos[0] + self._speed[0] * dt
         if (x + self._spriteSize[0] / 2 - self._hitbox.width / 2)  >= 0 and (x + self._hitbox.width / 2 + self._spriteSize[0] / 2) <= bound: 
             self._pos[0] = x 
-            self._hitbox.x = x + self._hitbox.width / 2 + self._spriteSize[0] / 2
+            self._hitbox.x = x + self._hitbox.width / 2 + 5
         for b in self._bullets:
-            b.update(dt)
+            b.update(dt)  
         self._bullets = [b for b in self._bullets if b.alive]
         self._firing_time -= dt
             
     def move_left(self):
         self._speed[0] = self._velocity * -1
       
-
     def move_right(self):
         self._speed[0] = self._velocity
     
     def shoot(self, top):
         if self._firing_time <= 0:
-            bullet = Bullet((self._pos[0] - 5, self._pos[1]), top)
+            bullet = Bullet((self._pos[0] + self._hitbox.width, self._hitbox.y), top)
             self._bullets.append(bullet)
             self._firing_time = self._firing_cooldown
-           
+    @property
+    def hitbox(self):
+        return self._hitbox
+
+    def hit(self):
+        pass
+
+    @property
+    def bullets(self):
+        return self._bullets
+            
+
     def move_stop(self):
         self._speed[0] = 0
-
-
 
 
 class Game:
@@ -147,13 +160,24 @@ class Game:
     def update(self):
         self._player1.update(self._bound_box[0], 1/60)
         self._player2.update(self._bound_box[0], 1/60)
+        self.collision()
         
     def draw(self):
         self.WINDOW.fill("#050400")
         self._player1.draw(self.WINDOW)
         self._player2.draw(self.WINDOW)
         pygame.display.flip()
-      
+
+    def collision(self):
+        bullets = self._player1.bullets
+        for b in  bullets:
+            if b.alive and b.collision(self._player2.hitbox):
+                b.destroy()
+        bullets = self._player2.bullets
+        for b in bullets:
+            if b.alive and b.collision(self._player1.hitbox):
+                b.destroy()
+
 if __name__ == "__main__":
     game = Game()
     game.main()
