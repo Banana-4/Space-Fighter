@@ -4,7 +4,7 @@ import os
 class Bullet:
     def __init__(self, pos, top):
         self._rect = pygame.Rect(pos[0], pos[1], 5, 10)
-        self._color = "#ff0000"
+        self._color = "#ae0a0e"
         self._alive = True
         self._alive_time = 0
         self._max_time = 60
@@ -92,6 +92,7 @@ class SpaceShip:
             bullet = Bullet((self._pos[0] + self._hitbox.width + 5, self._hitbox.y), top)
             self._bullets.append(bullet)
             self._firing_time = self._firing_cooldown
+    
     def hit(self):
         self._hitpoints -= 1
         
@@ -106,15 +107,32 @@ class SpaceShip:
     @property
     def bullets(self):
         return self._bullets
-            
+
+    @property
+    def health(self):
+        return self._hitpoints     
 
     def move_stop(self):
         self._speed[0] = 0
 
+class HUD:
+    def __init__(self):
+        self.font = pygame.font.SysFont('droidsans', 20)
+        self.color = "#0000ff"
+
+    def draw_health(self, surface, p1, p2):
+        p1_health = self.font.render(f"Player1: {p1}", True, self.color)
+        p2_health = self.font.render(f"Player2: {p2}", True, self.color)
+        gap_x = 40
+        gap_y = 5
+        surface.blit(p1_health, (gap_x, gap_y))
+        surface.blit(p2_health, (surface.get_width() - gap_x - p2_health.get_width(), gap_y))
+    
 
 class Game:
     def __init__(self) -> None:
         pygame.init()
+        pygame.font.init()
         self._width, self._height = 640, 480
         self._fps = 60
         self._run = False
@@ -123,7 +141,8 @@ class Game:
         self.WINDOW = pygame.display.set_mode((self._width, self._height))
         self._bound_box = self.WINDOW.get_size()
         self._player1 = SpaceShip("ship1.png", self._spriteSize, (self._width / 2, self._height - self._spriteSize[1] / 2))
-        self._player2 = SpaceShip("ship1.png", self._spriteSize, (self._width / 2, self._spriteSize[1] / 2), True)
+        self._player2 = SpaceShip("ship1.png", self._spriteSize, (self._width / 2, self._spriteSize[1] / 2 + 25), True)
+        self._hud = HUD()
 
         pygame.display.set_caption("Space Fight")
 
@@ -175,6 +194,7 @@ class Game:
         
     def draw(self):
         self.WINDOW.fill("#050400")
+        self._hud.draw_health(self.WINDOW, self._player1.health, self._player2.health)
         self._player1.draw(self.WINDOW)
         self._player2.draw(self.WINDOW)
         pygame.display.flip()
@@ -190,6 +210,7 @@ class Game:
             if b.alive and b.collision(self._player1.hitbox):
                 b.destroy()
                 self._player1.hit()
+               
 if __name__ == "__main__":
     game = Game()
     game.main()
